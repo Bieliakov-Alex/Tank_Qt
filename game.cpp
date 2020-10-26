@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include <QRandomGenerator>
 #include <QtMath>
 #include <QVariant>
 
@@ -29,8 +30,7 @@ Game::Game(std::shared_ptr<Tank> player, quint16 width, quint16 height, QObject 
     kWidth{width},
     kHeight{height},
     player_{player},
-    //enemy_list_{new Tank(10, 10), new Tank(580, 10), new Tank(10, 420), new Tank(580, 420)}
-    enemy_list_{new Tank(10, 10)},
+    enemy_list_{new Tank(10, 10), new Tank(580, 10), new Tank(10, 420), new Tank(580, 420)},
     game_timer_{std::make_unique<QTimer>(this)}
 {
     connect(game_timer_.get(), SIGNAL(timeout()), this, SLOT(MoveEnemySlot()));
@@ -90,8 +90,25 @@ void Game::MoveWestSlot()
 
 void Game::MoveEnemySlot()
 {
-    auto enemy = enemy_list_.begin();
-    MoveEnemyEast(static_cast<Tank*>(*enemy));
+    for(auto enemy: enemy_list_) {
+        auto direction = QRandomGenerator::global()->bounded(4);
+        switch (direction) {
+        case 0:
+            MoveEnemyNorth(static_cast<Tank*>(enemy));
+            break;
+        case 1:
+            MoveEnemyEast(static_cast<Tank*>(enemy));
+            break;
+        case 2:
+            MoveEnemySouth(static_cast<Tank*>(enemy));
+            break;
+        case 3:
+            MoveEnemyWest(static_cast<Tank*>(enemy));
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 bool Game::TankCollisions(quint16 x_pos, quint16 y_pos, const Tank *current_tank)
