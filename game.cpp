@@ -12,8 +12,8 @@ bool WallCollisions(quint16 width, quint16 height, quint16 x_pos, quint16 y_pos,
     return x_pos + size <= width && y_pos + size <= height;
 }
 
-bool EnemyCollisions(QList<QObject *> enemy_list_, quint16 x_pos, quint16 y_pos, quint8 size) {
-    for(auto enemy: enemy_list_){
+bool EnemyCollisions(const QList<QObject *>& enemy_list_, quint16 x_pos, quint16 y_pos, quint8 size) {
+    for(auto enemy: enemy_list_) {
         auto enemy_x_pos = static_cast<Tank*>(enemy)->XPos();
         auto enemy_y_pos = static_cast<Tank*>(enemy)->YPos();
         if(qFabs(enemy_x_pos-x_pos) < size && qFabs(enemy_y_pos-y_pos) < size) {
@@ -25,10 +25,11 @@ bool EnemyCollisions(QList<QObject *> enemy_list_, quint16 x_pos, quint16 y_pos,
 
 }
 
-Game::Game(std::shared_ptr<Tank> player, quint16 width, quint16 height, QObject *parent):
+Game::Game(std::shared_ptr<Tank> player, quint16 width, quint16 height, quint8 projectile_size, QObject *parent):
     QObject(parent),
     kWidth{width},
     kHeight{height},
+    kProjectileSize{projectile_size},
     player_{player},
     enemy_list_{new Tank(10, 10), new Tank(580, 10), new Tank(10, 420), new Tank(580, 420)},
     game_timer_{std::make_unique<QTimer>(this)}
@@ -50,6 +51,11 @@ quint16 Game::Height() const
 QVariant Game::EnemyList()
 {
     return QVariant::fromValue(enemy_list_);
+}
+
+QVariant Game::ProjectileList()
+{
+    return QVariant::fromValue(projectile_list_);
 }
 
 void Game::MoveNorthSlot()
@@ -111,6 +117,11 @@ void Game::MoveEnemySlot()
     }
 }
 
+void Game::ShootSlot()
+{
+    Shoot(*player_);
+}
+
 bool Game::TankCollisions(quint16 x_pos, quint16 y_pos, const Tank *current_tank)
 {
     if(current_tank == player_.get()) {
@@ -170,3 +181,19 @@ void Game::MoveEnemyEast(Tank *enemy_tank)
         enemy_tank->MoveEast();
     }
 }
+
+void Game::Shoot(const Tank& tank) {
+    auto direction = tank.Direction();
+    switch(direction) {
+    case Direction::Enum::kNorth:
+        if(tank.YPos() > kProjectileSize) {
+            quint16 x_pos = tank.XPos() + tank.Size() / 2 - kProjectileSize / 2;
+            quint16 y_pos = tank.YPos() + kProjectileSize;
+            projectile_list_.append(new Tank(x_pos, y_pos, direction, 15, 5));
+        }
+        break;
+    default:
+        break;
+    }
+}
+

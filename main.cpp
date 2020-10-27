@@ -3,14 +3,22 @@
 #include <QQmlContext>
 #include <QQuickWindow>
 
+#include "entitylist.h"
+#include "entitylistmodel.h"
 #include "game.h"
 #include "tank.h"
+
 
 int main(int argc, char *argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
+    qmlRegisterType<EntityListModel>("EEntityList", 1, 0, "EntityListModel");
+    qmlRegisterUncreatableType<EntityList>("EEntityList", 1, 0, "EntityList", QStringLiteral(" "));
+
+    EntityList entityList;
+    entityList.AddEntity(Tank(100, 100));
 
     auto player = std::make_shared<Tank>(295, 215);
 
@@ -23,6 +31,9 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("player", player.get());
     engine.rootContext()->setContextProperty("enemy_list", game.EnemyList());
+    engine.rootContext()->setContextProperty(QStringLiteral("projectile_list"), &entityList);
+
+
 
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
@@ -39,6 +50,7 @@ int main(int argc, char *argv[])
     QObject::connect(main_window, SIGNAL(northDirectionPressed()), &game, SLOT(MoveNorthSlot()));
     QObject::connect(main_window, SIGNAL(eastDirectionPressed()), &game, SLOT(MoveEastSlot()));
     QObject::connect(main_window, SIGNAL(southDirectionPressed()), &game, SLOT(MoveSouthSlot()));
+    QObject::connect(main_window, SIGNAL(shootPressed()), &game, SLOT(ShootSlot()));
 
     return app.exec();
 }

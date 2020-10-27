@@ -7,6 +7,8 @@ CONFIG += c++14
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        entitylist.cpp \
+        entitylistmodel.cpp \
         game.cpp \
         main.cpp \
         tank.cpp
@@ -26,5 +28,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     direction.h \
+    entitylist.h \
+    entitylistmodel.h \
     game.h \
     tank.h
